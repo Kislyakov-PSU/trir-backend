@@ -107,15 +107,10 @@ func TestHandler(w http.ResponseWriter, r *http.Request) {
     data, _ := ioutil.ReadAll(r.Body)
     tokenStr := string(data)
     
-    
-    token, err := jwt.Parse(tokenStr, func (token *jwt.Token) (interface{}, error) {
-        return pubKey, nil
-    })
-    
-    if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-        w.Write([]byte(fmt.Sprintf("Good token! Claims: %v", claims)))
+    claims, err := jwtExtractClaims(tokenStr)
+    if err != nil {
+        w.Write([]byte(err.Error()))
     } else {
-        w.Write([]byte(fmt.Sprintf("Error: %v", err)))
+        w.Write([]byte(fmt.Sprintf("%+v", claims)))
     }
-    
 }

@@ -16,5 +16,11 @@ var posts = []Post{
 
 var topics = []Topic{
     Topic{ID: 1, Title: "Hello world!", Text: "A simple topic", AuthorID: 1},
-    Topic{ID: 2, Title: "World hello!", Text: "Not so simple ehh?", AuthorID: 2},
+    Topic{ID: 2, Title: "World hello!", Text: "Not so simple ehh?", AuthorID: 3},
 }
+
+var (
+    lastUserID int = 2
+    lastPostID int = 6
+    lastTopicID int = 2
+)

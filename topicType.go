@@ -1,55 +1,54 @@
 package main
 
 import (
-    "github.com/graphql-go/graphql"
+	"github.com/graph-gophers/graphql-go"
+	"strconv"
 )
 
-type Topic struct {
-    ID int `json:"id"`
-    Title string `json:"title"`
-    Text string `json:"text"`
-    AuthorID int
+type topic struct {
+	ID     int    `json:"id" gorm:"primary_key"`
+	Title  string `json:"title"`
+	Text   string `json:"text" gorm:"size:5000"`
+	UserID int
 }
 
-var topicType = graphql.NewObject(graphql.ObjectConfig{
-    Name: "Topic",
-    Fields: graphql.Fields{
-        "id": &graphql.Field{
-            Type: graphql.Int,
-        },
-        "title": &graphql.Field{
-            Type: graphql.String,
-        },
-        "text": &graphql.Field{
-            Type: graphql.String,
-        },
-        "author": &graphql.Field{
-            Type: userType,
-            Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-                if topic, ok := p.Source.(Topic); ok {
-                    for _, user := range users {
-                        if user.ID == topic.AuthorID {
-                            return user, nil
-                        }
-                    }
-                }
-                return User{}, nil
-            },
-        },
-        "posts": &graphql.Field{
-            Type: graphql.NewList(postType),
-            Resolve: func(p graphql.ResolveParams) (interface{}, error) {
-                if topic, ok := p.Source.(Topic); ok {
-                    var _posts []Post
-                    for _, post := range posts {
-                        if post.TopicID == topic.ID {
-                            _posts = append(_posts, post)
-                        }
-                    }
-                    return _posts, nil
-                }
-                return []interface{}{}, nil
-            },
-        },
-    },
-})
+type topicInput struct {
+	Title  string
+	Text   string
+	UserID graphql.ID
+}
+
+type topicResolver struct {
+	t topic
+}
+
+func (r *topicResolver) ID() graphql.ID {
+	return graphql.ID(strconv.Itoa(r.t.ID))
+}
+
+func (r *topicResolver) Title() string {
+	return r.t.Title
+}
+
+func (r *topicResolver) Text() string {
+	return r.t.Text
+}
+
+func (r *topicResolver) User() *userResolver {
+	var _user user
+	db.Model(&r.t).Related(&_user)
+	return &userResolver{_user}
+}
+
+func (r *topicResolver) Posts() *[]*postResolver {
+	var list []*postResolver
+	var posts []post
+
+	db.Model(&r.t).Related(&posts)
+
+	for _, post := range posts {
+		list = append(list, &postResolver{post})
+	}
+
+	return &list
+}
